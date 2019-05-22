@@ -36,17 +36,17 @@ class Game:
       self.gamePadButtonText.append(tmpTexts)
 
     self.iterationText = tk.StringVar()
-    tk.Label(self.window, textvariable=self.iterationText).grid(row=self.size, column=int(self.size / 2), padx=5, pady=3)
+    tk.Label(self.window, textvariable=self.iterationText).grid(row=0, column=self.size, padx=5, pady=3)
     self.iterations = 0
     self.iterationText.set(str(self.iterations) + " Iterations")
 
     self.trainingIterationsText = tk.StringVar()
-    tk.Label(self.window, textvariable=self.trainingIterationsText).grid(row=self.size + 1, column=int(self.size / 2), padx=5, pady=3)
+    tk.Label(self.window, textvariable=self.trainingIterationsText).grid(row=1, column=self.size, padx=5, pady=3)
     self.trainingIterations = 10000
     self.trainingIterationsText.set(str(self.trainingIterations) + " Training Iterations")
 
     self.samplesText = tk.StringVar()
-    tk.Label(self.window, textvariable=self.samplesText).grid(row=self.size + 2, column=int(self.size / 2), padx=5, pady=3)
+    tk.Label(self.window, textvariable=self.samplesText).grid(row=2, column=self.size, padx=5, pady=3)
     self.samplesText.set("0 Samples")
 
     # 0 = user
