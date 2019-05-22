@@ -1,6 +1,8 @@
 # TicTacToe AI-NN
 
 Is a simple Python-Program where you play TicTacToe against an AI, which has no idea of what is going on at first but learns from the steps you make and tries to replicate them making it improve over time.
+#### Note:
+The Neural Network (AI) will not be saved once the game exits, meaning it will have to learn from the ground up again everytime you restart the program.
 
 ## Getting Started
 
