@@ -49,6 +49,13 @@ class Game:
     tk.Label(self.window, textvariable=self.samplesText).grid(row=2, column=self.size, padx=5, pady=3)
     self.samplesText.set("0 Samples")
 
+    self.trainingRoundsInput = tk.StringVar()
+    trainingInput = tk.Entry(self.window, textvariable=self.trainingRoundsInput).grid(row=0, column=self.size + 1, padx=5, pady=5)
+    trainMatch = tk.Button(self.window, text="Train NNs", command = partial(self.trainMatchNN)).grid(row=1, column=self.size + 1, padx=5, pady=5)
+
+    tk.Button(self.window, text="Save", command = partial(self.saveNN)).grid(row=0, column=self.size + 2, padx=5, pady=5)
+    tk.Button(self.window, text="Load", command = partial(self.loadNN)).grid(row=1, column=self.size + 2, padx=5, pady=5)
+
     # 0 = user
     # 1 = ai
     self.player = 0
@@ -57,11 +64,29 @@ class Game:
 
     self.createNN()
 
+  def getBoard(self):
+    before = copy.copy(self.gamePadInfo)
+
+    tmpBoard = []
+    for stepY in range(len(before)):
+      for stepX in range(len(before[stepY])):
+        field = before[stepY][stepX]
+
+        tmpBoard.append(field)
+
+    return tmpBoard
+
   def createNN(self):
     intputCount = self.size * self.size
     outputCount = self.size * self.size
 
     self.neural_network = NeuralNetwork(intputCount, intputCount * 6, outputCount, [intputCount * 5, intputCount * 4, intputCount * 3, intputCount * 2])
+
+  def saveNN(self):
+    self.neural_network.save()
+
+  def loadNN(self):
+    self.neural_network.load()
 
   def trainNN(self):
     inputs = []
@@ -80,19 +105,123 @@ class Game:
     self.iterations += self.trainingIterations
     self.iterationText.set(str(self.iterations) + " Iterations")
 
-  def guessNN(self):
-    before = copy.copy(self.gamePadInfo)
+  def guessNN(self, changePerspectiv):
+    tmpBoard = self.getBoard()
 
-    tmpBoard = []
-    for stepY in range(len(before)):
-      for stepX in range(len(before[stepY])):
-        field = before[stepY][stepX]
-
-        tmpBoard.append(field)
+    if changePerspectiv:
+      for index in range(len(tmpBoard)):
+        if tmpBoard[index] == 0:
+          tmpBoard[index] = 1
+        else:
+          if tmpBoard[index] == 1:
+            tmpBoard[index] = 0
 
     rawGuesses = self.neural_network.getOutput(tmpBoard)
 
     return rawGuesses
+
+  def getMoveNN(self, changePerspectiv):
+    cords = []
+
+    guessed = False
+
+    rawGuesses = self.guessNN(changePerspectiv)
+    guesses = rawGuesses.tolist()
+    sortedGuesses = copy.copy(guesses)
+    sortedGuesses.sort()
+        
+    index = len(sortedGuesses) - 1
+    while True:
+      value = sortedGuesses[index]
+      valueIndex = guesses.index(value)
+
+      before = copy.copy(self.gamePadInfo)
+      for stepY in range(len(before)):
+        for stepX in range(len(before[stepY])):
+          if (stepY * self.size + stepX) == valueIndex:
+            x = stepX
+            y = stepY
+
+      if self.gamePadInfo[y][x] == -1:
+        cords.append(x)
+        cords.append(y)
+        return cords
+
+      index -= 1
+
+    return [-1, -1]
+
+  def trainMatchNN(self):
+    defaultTrainingRounds = 10
+
+    trainingRounds = int(self.trainingRoundsInput.get())
+
+    if trainingRounds < 3:
+      trainingRounds = defaultTrainingRounds
+
+      self.trainingRoundsInput.set("10")
+
+    for currentRound in range(trainingRounds):
+      tmpPlayer0Moves = []
+      tmpPlayer1Moves = []
+      self.player = 0
+      while True:
+        if self.player == 1:
+          guessedCords = self.getMoveNN(False)
+
+          x = guessedCords[0]
+          y = guessedCords[1]
+
+          tmpPlayer0Moves.append(self.createPlayerMove(x, y, False))
+
+          self.gamePadButtonText[y][x].set("O")
+          self.gamePadInfo[y][x] = self.player
+
+          self.player = 0
+
+        else:
+          guessedCords = self.getMoveNN(True)
+
+          x = guessedCords[0]
+          y = guessedCords[1]
+
+          tmpPlayer1Moves.append(self.createPlayerMove(x, y, True))
+
+          self.gamePadButtonText[y][x].set("X")
+          self.gamePadInfo[y][x] = self.player
+
+          self.player = 1
+
+        winner = self.checkWin()
+        if winner != -1:
+          print("Winner " + str(winner))
+          self.restart()
+
+          if winner == 0:
+            for iteration in range(len(tmpPlayer0Moves)):
+              self.playerSteps.append(tmpPlayer0Moves[iteration])
+          else:
+            for iteration in range(len(tmpPlayer1Moves)):
+              self.playerSteps.append(tmpPlayer1Moves[iteration])
+
+          self.trainNN()
+          
+          break
+
+        if self.isOver():
+          print("Tie")
+          self.restart()
+
+          for iteration in range(len(tmpPlayer0Moves)):
+            self.playerSteps.append(tmpPlayer0Moves[iteration])
+          for iteration in range(len(tmpPlayer1Moves)):
+            self.playerSteps.append(tmpPlayer1Moves[iteration])
+
+          self.trainNN()
+
+          break
+
+      print("Done with Iteration: " + str(currentRound))
 
   def restart(self):
     self.plays = self.plays + 1
@@ -161,62 +290,30 @@ class Game:
     
     return True
 
-  def getMoveNN(self):
-    cords = []
-
-    guessed = False
-
-    rawGuesses = self.guessNN()
-    print(rawGuesses)
-    guesses = rawGuesses.tolist()
-    sortedGuesses = copy.copy(guesses)
-    sortedGuesses.sort()
-        
-    index = len(sortedGuesses) - 1
-    while True:
-      value = sortedGuesses[index]
-      valueIndex = guesses.index(value)
-
-      before = copy.copy(self.gamePadInfo)
-      for stepY in range(len(before)):
-        for stepX in range(len(before[stepY])):
-          if (stepY * self.size + stepX) == valueIndex:
-            x = stepX
-            y = stepY
-
-      if self.gamePadInfo[y][x] == -1:
-        cords.append(x)
-        cords.append(y)
-        return cords
-
-      index -= 1
-
-    return [-1, -1]
-
-  def addPlayerMove(self, x, y, changePerspectiv):
-    before = copy.copy(self.gamePadInfo)
+  def createPlayerMove(self, x, y, changePerspectiv):
     playerMove = []
 
-    moveBoard = []
     move = []
-    for stepY in range(len(before)):
-      for stepX in range(len(before[stepY])):
-        field = before[stepY][stepX]
+    moveBoard = self.getBoard()
+    for index in range(len(moveBoard)):
+      if changePerspectiv:
+        if moveBoard[index] == 0:
+          moveBoard[index] = 1
+        else:
+          if moveBoard[index] == 1:
+            moveBoard[index] = 0
+      
+      move.append(0)
 
-        if changePerspectiv:
-          if field == 0:
-            field = 1
-          else:
-            if field == 1:
-              field = 0
-
-        moveBoard.append(field)
-        move.append(0)
-        
     move[y * self.size + x] = 1
 
     playerMove.append(moveBoard)
     playerMove.append(move)
+
+    return playerMove
+
+  def addPlayerMove(self, x, y, changePerspectiv):
+    playerMove = self.createPlayerMove(x, y, changePerspectiv)
 
     self.playerSteps.append(playerMove)
 
@@ -224,7 +321,7 @@ class Game:
 
   def play(self, x, y):
     if self.player == 1:
-      guessedCords = self.getMoveNN()
+      guessedCords = self.getMoveNN(False)
 
       x = guessedCords[0]
       y = guessedCords[1]
@@ -249,12 +346,10 @@ class Game:
     if winner != -1:
       print("Winner " + str(winner))
       self.restart()
-      self.trainNN()
       
       return
 
     if self.isOver():
       self.restart()
-      self.trainNN()
 
       return

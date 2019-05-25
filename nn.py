@@ -1,4 +1,5 @@
 from numpy import exp, array, random, dot
+import pickle
 
 class NeuronLayer():
   def __init__(self, number_of_neurons, number_of_inputs_per_neuron):
@@ -99,3 +100,19 @@ class NeuralNetwork():
       outputs.append(layerOutput)
 
     return outputs[len(outputs) - 1]
+
+  def save(self):
+    name = "test.dat"
+
+    with open(name, "wb") as f:
+        pickle.dump(self.layers, f)
+
+  def load(self):
+    name = "test.dat"
+
+    try:
+        with open("bin.dat") as f:
+            self.layers = pickle.load(f)
+    except:
+        return False
+    return True
