@@ -84,7 +84,6 @@ class Game:
 
   def saveNN(self):
     print("Saving Neural Network...")
-    self.neural_network.printWeights()
 
     self.neural_network.save()
 
@@ -95,8 +94,6 @@ class Game:
 
     if worked == False:
       print("Could not load Neural Network")
-    else:
-      self.neural_network.printWeights()
 
   def trainNN(self):
     inputs = []
