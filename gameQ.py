@@ -77,7 +77,7 @@ class Game:
     return tmpBoard
 
   def createQ(self):
-    self.qTable = QTable(self.size, 0.1, 0.3)
+    self.qTable = QTable(self.size, 0.05, 0.5)
 
   def saveQ(self):
     print("Saving QTable...")
@@ -139,13 +139,20 @@ class Game:
     defaultTrainingRounds = 10
 
     trainingRounds = int(self.trainingRoundsInput.get())
+    print(str(trainingRounds))
 
-    if trainingRounds < 3:
+    if trainingRounds < -1:
       trainingRounds = defaultTrainingRounds
 
       self.trainingRoundsInput.set("10")
 
-    for currentRound in range(trainingRounds):
+    roundCount = trainingRounds
+    if trainingRounds == -1:
+      roundCount = 1
+
+    currentRound = 0
+    iteration = 0
+    while currentRound < roundCount:
       steps = []
       while True:
         # AI
@@ -198,8 +205,15 @@ class Game:
       self.iterationText.set(str(self.iterations) + " Iterations")
       self.window.update()
 
-      if currentRound % 250 == 0:
+      if iteration % 2500 == 0:
         self.saveQ()
+
+      currentRound += 1
+      iteration += 1
+
+      if trainingRounds == -1:
+        currentRound -= 1
+
 
     self.saveQ()
 

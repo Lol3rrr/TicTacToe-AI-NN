@@ -49,7 +49,7 @@ class QTable():
     if training == True:
       prob = random.randrange(100)
 
-      if prob >= 75:
+      if prob >= 60:
         exploring = True
 
     highestIndex = random.randrange(len(outputs))
