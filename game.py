@@ -83,10 +83,20 @@ class Game:
     self.neural_network = NeuralNetwork(intputCount, intputCount * 6, outputCount, [intputCount * 5, intputCount * 4, intputCount * 3, intputCount * 2])
 
   def saveNN(self):
+    print("Saving Neural Network...")
+    self.neural_network.printWeights()
+
     self.neural_network.save()
 
   def loadNN(self):
-    self.neural_network.load()
+    print("Loading Neural Network...")
+
+    worked = self.neural_network.load()
+
+    if worked == False:
+      print("Could not load Neural Network")
+    else:
+      self.neural_network.printWeights()
 
   def trainNN(self):
     inputs = []
@@ -220,8 +230,17 @@ class Game:
           self.trainNN()
 
           break
+      
+      self.iterationText.set(str(self.iterations) + " Iterations")
+      self.samplesText.set(str(len(self.playerSteps)) + " Samples")
+      self.window.update()
 
       print("Done with Iteration: " + str(currentRound))
+
+      if currentRound % 10 == 0:
+        self.saveNN()
+
+    self.saveNN()
 
   def restart(self):
     self.plays = self.plays + 1

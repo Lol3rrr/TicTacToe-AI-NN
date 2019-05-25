@@ -9,6 +9,9 @@ class NeuronLayer():
     self.neuronCount = number_of_neurons
     self.synaptic_weights = 2 * random.random((number_of_inputs_per_neuron, number_of_neurons)) - 1
 
+  def printWeight(self):
+    print(self.synaptic_weights)
+
 class NeuralNetwork():
   def __init__(self, inputCount, inputNeurons, outputCount, hiddenLayers):
     self.layers = []
@@ -101,6 +104,10 @@ class NeuralNetwork():
 
     return outputs[len(outputs) - 1]
 
+  def printWeights(self):
+    for layer in range(len(self.layers)):
+      self.layers[layer].printWeight()
+
   def save(self):
     name = "test.dat"
 
@@ -111,8 +118,9 @@ class NeuralNetwork():
     name = "test.dat"
 
     try:
-        with open("bin.dat") as f:
-            self.layers = pickle.load(f)
+      with open(name, "rb") as f:
+        self.layers = pickle.load(f)
     except:
-        return False
+      return False
+
     return True
